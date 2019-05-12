@@ -103,6 +103,10 @@ export interface WorkerSharedOptions {
    * How long to wait between polling for jobs in milliseconds (for jobs scheduled in the future/retries)
    */
   pollInterval?: number;
+  /**
+   * PostgreSQL existing database schema name
+   */
+  schemaName?: string;
 }
 
 export interface WorkerOptions extends WorkerSharedOptions {

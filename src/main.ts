@@ -15,7 +15,7 @@ import {
   makeWithPgClientFromPool,
   makeWithPgClientFromClient,
 } from "./helpers";
-import { CONCURRENT_JOBS } from "./config";
+import { CONCURRENT_JOBS, DEFAULT_SCHEMA } from "./config";
 
 const allWorkerPools: Array<WorkerPool> = [];
 
@@ -74,6 +74,7 @@ export function runTaskList(
 ): WorkerPool {
   debug(`Worker pool options are %O`, options);
   const { concurrency = CONCURRENT_JOBS, ...workerOptions } = options;
+  const { schemaName = DEFAULT_SCHEMA } = workerOptions;
 
   // Clean up when certain signals occur
   registerSignalHandlers();
@@ -175,9 +176,9 @@ export function runTaskList(
         debug("RELEASING THE JOBS", workerIds);
         const { rows: cancelledJobs } = await pgPool.query(
           `
-          SELECT graphile_worker.fail_job(job_queues.locked_by, jobs.id, $2)
-          FROM graphile_worker.jobs
-          INNER JOIN graphile_worker.job_queues ON (job_queues.queue_name = jobs.queue_name)
+          SELECT ${schemaName}.fail_job(job_queues.locked_by, jobs.id, $2)
+          FROM ${schemaName}.jobs
+          INNER JOIN ${schemaName}.job_queues ON (job_queues.queue_name = jobs.queue_name)
           WHERE job_queues.locked_by = ANY($1::text[]) AND jobs.id = ANY($3::int[]);
         `,
           [workerIds, message, jobsInProgress.map(job => job.id)]

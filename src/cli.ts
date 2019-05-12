@@ -12,6 +12,12 @@ const argv = yargs
     alias: "c",
   })
   .string("connection")
+  .option("schema", {
+    description:
+      "Name of existing database schema, will create one call 'graphile_worker' if not provided",
+    alias: "s",
+  })
+  .string("schema")
   .option("once", {
     description: "Run until there are no runnable jobs left, then exit",
     alias: "1",
@@ -63,6 +69,7 @@ async function main() {
       ? argv["poll-interval"]
       : POLL_INTERVAL,
     connectionString: DATABASE_URL,
+    schemaName: argv.schema,
     taskList: watchedTasks.tasks,
   };
 

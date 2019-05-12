@@ -49,8 +49,10 @@ const processOptions = async (options: RunnerOptions) => {
 
     const withPgClient = makeWithPgClientFromPool(pgPool);
 
-    // Migrate
-    await withPgClient(client => migrate(client));
+    if (!options.schemaName) {
+      // Migrate
+      await withPgClient(client => migrate(client));
+    }
 
     return { taskList, pgPool, withPgClient, release };
   } catch (e) {
@@ -82,7 +84,7 @@ export const run = async (options: RunnerOptions): Promise<Runner> => {
         await release();
       }
     },
-    addJob: makeAddJob(withPgClient),
+    addJob: makeAddJob(withPgClient, options.schemaName),
     promise: workerPool.promise,
   };
 };

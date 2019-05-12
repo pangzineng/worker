@@ -6,7 +6,7 @@ import {
   WorkerOptions,
 } from "./interfaces";
 import globalDebug from "./debug";
-import { POLL_INTERVAL, MAX_CONTIGUOUS_ERRORS } from "./config";
+import { POLL_INTERVAL, MAX_CONTIGUOUS_ERRORS, DEFAULT_SCHEMA } from "./config";
 import * as assert from "assert";
 import deferred from "./deferred";
 import { makeHelpers } from "./helpers";
@@ -21,6 +21,7 @@ export function makeNewWorker(
     pollInterval = POLL_INTERVAL,
     // The `||0.1` is to eliminate the vanishingly-small possibility of Math.random() returning 0. Math.random() can never return 1.
     workerId = `worker-${String(Math.random() || 0.1).substr(2)}`,
+    schemaName = DEFAULT_SCHEMA
   } = options;
   const promise = deferred();
   let activeJob: Job | null = null;
@@ -71,7 +72,7 @@ export function makeNewWorker(
       const {
         rows: [jobRow],
       } = await withPgClient(client =>
-        client.query("SELECT * FROM graphile_worker.get_job($1, $2);", [
+        client.query(`SELECT * FROM ${schemaName}.get_job($1, $2);`, [
           workerId,
           supportedTaskNames,
         ])
@@ -150,7 +151,7 @@ export function makeNewWorker(
         debug(`Found task ${job.id} (${job.task_identifier})`);
         const task = tasks[job.task_identifier];
         assert(task, `Unsupported task '${job.task_identifier}'`);
-        const helpers = makeHelpers(job, { withPgClient });
+        const helpers = makeHelpers(schemaName, job, { withPgClient });
         await task(job.payload, helpers);
       } catch (error) {
         err = error;
@@ -173,7 +174,7 @@ export function makeNewWorker(
         );
         // TODO: retry logic, in case of server connection interruption
         await withPgClient(client =>
-          client.query("SELECT * FROM graphile_worker.fail_job($1, $2, $3);", [
+          client.query(`SELECT * FROM ${schemaName}.fail_job($1, $2, $3);`, [
             workerId,
             job.id,
             message,
@@ -190,7 +191,7 @@ export function makeNewWorker(
         }
         // TODO: retry logic, in case of server connection interruption
         await withPgClient(client =>
-          client.query("SELECT * FROM graphile_worker.complete_job($1, $2);", [
+          client.query(`SELECT * FROM ${schemaName}.complete_job($1, $2);`, [
             workerId,
             job.id,
           ])
