@@ -1,5 +1,5 @@
 {
-  "name": "graphile-worker",
+  "name": "graphile-worker-decoupled",
   "version": "0.1.0-alpha.0",
   "description": "Job queue for PostgreSQL",
   "main": "dist/index.js",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/graphile/worker.git"
+    "url": "git+ssh://git@github.com/pangzineng/worker.git"
   },
   "keywords": [
     "postgresql",
@@ -29,12 +29,12 @@
     "background",
     "tasks"
   ],
-  "author": "Benjie Gillam <code@benjiegillam.com>",
+  "author": "Peter Pang <pangzineng@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/graphile/worker/issues"
+    "url": "https://github.com/pangzineng/worker/issues"
   },
-  "homepage": "https://github.com/graphile/worker#readme",
+  "homepage": "https://github.com/pangzineng/worker#readme",
   "dependencies": {
     "@types/chokidar": "^1.7.5",
     "@types/debug": "^4.1.2",

@@ -84,7 +84,7 @@ export const run = async (options: RunnerOptions): Promise<Runner> => {
         await release();
       }
     },
-    addJob: makeAddJob(withPgClient, options.schemaName),
+    addJob: makeAddJob(withPgClient, options),
     promise: workerPool.promise,
   };
 };

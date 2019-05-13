@@ -1,13 +1,13 @@
 import { debugFactory } from "./debug";
-import { WithPgClient, Job, Helpers, TaskOptions } from "./interfaces";
+import { WithPgClient, Job, Helpers, TaskOptions, WorkerOptions } from "./interfaces";
 import { Pool, PoolClient } from "pg";
 
-export function makeAddJob(withPgClient: WithPgClient, schemaName: String) {
+export function makeAddJob(withPgClient: WithPgClient, workerOptions: WorkerOptions) {
   return (identifier: string, payload: any = {}, options: TaskOptions = {}) => {
     return withPgClient(async pgClient => {
       const { rows } = await pgClient.query(
         `
-        select * from ${schemaName}.add_job(
+        select * from ${workerOptions.schemaName}.add_job(
           identifier => $1::text,
           payload => $2::json,
           queue_name => coalesce($3::text, public.gen_random_uuid()::text),
@@ -30,7 +30,7 @@ export function makeAddJob(withPgClient: WithPgClient, schemaName: String) {
 }
 
 export function makeHelpers(
-  schemaName: String,
+  options: WorkerOptions,
   job: Job,
   { withPgClient }: { withPgClient: WithPgClient }
 ): Helpers {
@@ -38,7 +38,7 @@ export function makeHelpers(
     job,
     debug: debugFactory(`${job.task_identifier}`),
     withPgClient,
-    addJob: makeAddJob(withPgClient, schemaName),
+    addJob: makeAddJob(withPgClient, options),
     // TODO: add an API for giving workers more helpers
   };
 }

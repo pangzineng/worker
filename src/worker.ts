@@ -151,7 +151,7 @@ export function makeNewWorker(
         debug(`Found task ${job.id} (${job.task_identifier})`);
         const task = tasks[job.task_identifier];
         assert(task, `Unsupported task '${job.task_identifier}'`);
-        const helpers = makeHelpers(schemaName, job, { withPgClient });
+        const helpers = makeHelpers(options, job, { withPgClient });
         await task(job.payload, helpers);
       } catch (error) {
         err = error;

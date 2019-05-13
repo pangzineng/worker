@@ -69,7 +69,7 @@ async function main() {
       ? argv["poll-interval"]
       : POLL_INTERVAL,
     connectionString: DATABASE_URL,
-    schemaName: argv.schema,
+    schemaName: argv.schema || '',
     taskList: watchedTasks.tasks,
   };
 
