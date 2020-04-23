@@ -1,6 +1,6 @@
 {
   "name": "graphile-worker-decoupled",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.5",
   "description": "Job queue for PostgreSQL",
   "main": "dist/index.js",
   "scripts": {
@@ -36,15 +36,11 @@
   },
   "homepage": "https://github.com/pangzineng/worker#readme",
   "dependencies": {
-    "@types/chokidar": "^1.7.5",
-    "@types/debug": "^4.1.2",
-    "@types/pg": "^7.4.11",
-    "chokidar": "^2.1.2",
-    "debug": "^4.1.1",
-    "pg": ">=6.5 <8",
-    "pg-connection-string": "^2.0.0",
-    "tslib": "^1.9.3",
-    "yargs": "^13.2.2"
+    "@types/pg": "^7.14.3",
+    "chokidar": "^3.3.1",
+    "pg": "^7.18.2",
+    "tslib": "^1.11.1",
+    "yargs": "^15.3.1"
   },
   "devDependencies": {
     "@types/jest": "^24.0.11",

@@ -1,4 +1,3 @@
-import { debugFactory } from "./debug";
 import { WithPgClient, Job, Helpers, TaskOptions, WorkerOptions } from "./interfaces";
 import { Pool, PoolClient } from "pg";
 
@@ -36,7 +35,6 @@ export function makeHelpers(
 ): Helpers {
   return {
     job,
-    debug: debugFactory(`${job.task_identifier}`),
     withPgClient,
     addJob: makeAddJob(withPgClient, options),
     // TODO: add an API for giving workers more helpers

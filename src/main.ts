@@ -7,7 +7,6 @@ import {
   WorkerOptions,
   WorkerPoolOptions,
 } from "./interfaces";
-import debug from "./debug";
 import deferred from "./deferred";
 import SIGNALS from "./signals";
 import { makeNewWorker } from "./worker";
@@ -22,8 +21,6 @@ const allWorkerPools: Array<WorkerPool> = [];
 // Exported for testing only
 export { allWorkerPools as _allWorkerPools };
 
-debug("Booting worker");
-
 let _registeredSignalHandlers = false;
 let _shuttingDown = false;
 function registerSignalHandlers() {
@@ -37,9 +34,7 @@ function registerSignalHandlers() {
   }
   _registeredSignalHandlers = true;
   SIGNALS.forEach(signal => {
-    debug("Registering signal handler for ", signal);
     const removeHandler = () => {
-      debug("Removing signal handler for ", signal);
       process.removeListener(signal, handler);
     };
     const handler = function() {
@@ -72,7 +67,6 @@ export function runTaskList(
   pgPool: Pool,
   options: WorkerPoolOptions = {}
 ): WorkerPool {
-  debug(`Worker pool options are %O`, options);
   const { concurrency = CONCURRENT_JOBS, ...workerOptions } = options;
   const { schemaName = DEFAULT_SCHEMA } = workerOptions;
 
@@ -173,8 +167,7 @@ export function runTaskList(
           .filter((job): job is Job => !!job);
         // Remove all the workers - we're shutting them down manually
         workers.splice(0, workers.length).map(worker => worker.release());
-        debug("RELEASING THE JOBS", workerIds);
-        const { rows: cancelledJobs } = await pgPool.query(
+        await pgPool.query(
           `
           SELECT ${schemaName}.fail_job(job_queues.locked_by, jobs.id, $2)
           FROM ${schemaName}.jobs
@@ -183,8 +176,6 @@ export function runTaskList(
         `,
           [workerIds, message, jobsInProgress.map(job => job.id)]
         );
-        debug(cancelledJobs);
-        debug("JOBS RELEASED");
       } catch (e) {
         console.error(e.message); // eslint-disable-line no-console
       }

@@ -1,5 +1,4 @@
 import { PoolClient, Pool } from "pg";
-import { IDebugger } from "./debug";
 
 /*
  * Terminology:
@@ -27,7 +26,6 @@ export type AddJobFunction = (
 
 export interface Helpers {
   job: Job;
-  debug: IDebugger;
   withPgClient: WithPgClient;
   addJob: AddJobFunction;
 }

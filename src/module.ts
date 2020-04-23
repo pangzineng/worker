@@ -1,7 +1,6 @@
 import { dirname } from "path";
 import { readFile } from "./fs";
-import _module = require("module");
-const { Module } = _module;
+import { Module } from "module";
 
 function stripBOM(str: string) {
   if (str.charCodeAt(0) === 0xfeff) {

@@ -2,7 +2,6 @@ import { basename } from "path";
 import * as chokidar from "chokidar";
 import { isValidTask, TaskList, WatchedTaskList } from "./interfaces";
 import { tryStat, readdir } from "./fs";
-import debug from "./debug";
 import { fauxRequire } from "./module";
 
 function validTasks(obj: any): TaskList {
@@ -75,23 +74,13 @@ export default async function getTasks(
   }
 
   const watchers: Array<chokidar.FSWatcher> = [];
-  let taskNames: Array<string> = [];
   const tasks: TaskList = {};
-
-  const debugSupported = () => {
-    const oldTaskNames = taskNames;
-    taskNames = Object.keys(tasks).sort();
-    if (oldTaskNames.join(",") !== taskNames.join(",")) {
-      debug(`Supported task names: '${taskNames.join("', '")}'`);
-    }
-  };
 
   if (pathStat.isFile()) {
     if (watch) {
       watchers.push(
         chokidar.watch(taskPath, { ignoreInitial: true }).on("all", () => {
           loadFileIntoTasks(tasks, taskPath, null, watch)
-            .then(debugSupported)
             .catch(e => {
               // eslint-disable-next-line no-console
               console.error(`Error in ${taskPath}: ${e.message}`);
@@ -112,10 +101,8 @@ export default async function getTasks(
             const taskName = basename(eventFilePath, ".js");
             if (event === "unlink") {
               delete tasks[taskName];
-              debugSupported();
             } else {
               loadFileIntoTasks(tasks, eventFilePath, taskName, watch)
-                .then(debugSupported)
                 .catch(e => {
                   // eslint-disable-next-line no-console
                   console.error(`Error in ${eventFilePath}: ${e.message}`);
@@ -151,7 +138,6 @@ export default async function getTasks(
     }
   }
 
-  taskNames = Object.keys(tasks).sort();
   return {
     tasks,
     release: () => {

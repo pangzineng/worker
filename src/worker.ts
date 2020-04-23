@@ -5,7 +5,6 @@ import {
   WithPgClient,
   WorkerOptions,
 } from "./interfaces";
-import globalDebug from "./debug";
 import { POLL_INTERVAL, MAX_CONTIGUOUS_ERRORS, DEFAULT_SCHEMA } from "./config";
 import * as assert from "assert";
 import deferred from "./deferred";
@@ -37,10 +36,6 @@ export function makeNewWorker(
   };
   let active = true;
 
-  const debug = (msg: string) => {
-    globalDebug("[Worker %s] %s", workerId, msg);
-  };
-
   const release = () => {
     if (!active) {
       return;
@@ -52,8 +47,6 @@ export function makeNewWorker(
     }
     return promise;
   };
-
-  debug(`Spawned`);
 
   let contiguousErrors = 0;
   let again = false;
@@ -72,25 +65,24 @@ export function makeNewWorker(
       const {
         rows: [jobRow],
       } = await withPgClient(client =>
-        client.query(`SELECT * FROM ${schemaName}.get_job($1, $2);`, [
-          workerId,
-          supportedTaskNames,
-        ])
+        client.query({
+          text: `SELECT * FROM ${schemaName}.get_job($1, $2);`,
+          values: [
+            workerId,
+            supportedTaskNames,
+          ],
+          name: "get_job"
+        })
       );
       activeJob = jobRow && jobRow.id ? jobRow : null;
     } catch (err) {
       if (continuous) {
         contiguousErrors++;
-        debug(
-          `Failed to acquire job: ${
-            err.message
-          } (${contiguousErrors}/${MAX_CONTIGUOUS_ERRORS})`
-        );
         if (contiguousErrors >= MAX_CONTIGUOUS_ERRORS) {
           promise.reject(
             new Error(
               `Failed ${contiguousErrors} times in a row to acquire job; latest error: ${
-                err.message
+              err.message
               }`
             )
           );
@@ -148,7 +140,6 @@ export function makeNewWorker(
        */
       const startTimestamp = process.hrtime();
       try {
-        debug(`Found task ${job.id} (${job.task_identifier})`);
         const task = tasks[job.task_identifier];
         assert(task, `Unsupported task '${job.task_identifier}'`);
         const helpers = makeHelpers(options, job, { withPgClient });
@@ -163,38 +154,46 @@ export function makeNewWorker(
         // eslint-disable-next-line no-console
         console.error(
           `Failed task ${job.id} (${job.task_identifier}) with error ${
-            err.message
+          err.message
           } (${duration.toFixed(2)}ms)${
-            stack
-              ? `:\n  ${String(stack)
-                  .replace(/\n/g, "\n  ")
-                  .trim()}`
-              : ""
+          stack
+            ? `:\n  ${String(stack)
+              .replace(/\n/g, "\n  ")
+              .trim()}`
+            : ""
           }`
         );
         // TODO: retry logic, in case of server connection interruption
         await withPgClient(client =>
-          client.query(`SELECT * FROM ${schemaName}.fail_job($1, $2, $3);`, [
-            workerId,
-            job.id,
-            message,
-          ])
+          client.query({
+            text: `SELECT * FROM ${schemaName}.fail_job($1, $2, $3);`,
+            values: [
+              workerId,
+              job.id,
+              message,
+            ],
+            name: "fail_job"
+          })
         );
       } else {
         if (!process.env.NO_LOG_SUCCESS) {
           // eslint-disable-next-line no-console
           console.log(
             `Completed task ${job.id} (${
-              job.task_identifier
+            job.task_identifier
             }) with success (${duration.toFixed(2)}ms)`
           );
         }
         // TODO: retry logic, in case of server connection interruption
         await withPgClient(client =>
-          client.query(`SELECT * FROM ${schemaName}.complete_job($1, $2);`, [
-            workerId,
-            job.id,
-          ])
+          client.query({
+            text: `SELECT * FROM ${schemaName}.complete_job($1, $2);`,
+            values: [
+              workerId,
+              job.id,
+            ],
+            name: "complete_job"
+          })
         );
       }
     } catch (fatalError) {
@@ -202,7 +201,7 @@ export function makeNewWorker(
       // eslint-disable-next-line no-console
       console.error(
         `Failed to release job '${job.id}' ${when}; committing seppuku\n${
-          fatalError.message
+        fatalError.message
         }`
       );
       promise.reject(fatalError);
