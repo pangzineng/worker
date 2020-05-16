@@ -8,7 +8,7 @@ export function makeAddJob(withPgClient: WithPgClient, workerOptions: WorkerOpti
         `
         select * from ${workerOptions.schemaName}.add_job(
           identifier => $1::text,
-          payload => $2::json,
+          payload => $2::jsonb,
           queue_name => coalesce($3::text, public.gen_random_uuid()::text),
           run_at => coalesce($4::timestamptz, now()),
           max_attempts => coalesce($5::int, 25)

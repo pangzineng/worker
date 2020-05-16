@@ -1,6 +1,6 @@
 {
   "name": "graphile-worker-decoupled",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.10",
   "description": "Job queue for PostgreSQL",
   "main": "dist/index.js",
   "scripts": {
